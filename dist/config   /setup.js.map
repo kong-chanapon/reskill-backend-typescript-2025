@@ -1,0 +1,1 @@
+{"version":3,"file":"setup.js","sourceRoot":"","sources":["../../src/config   /setup.ts"],"names":[],"mappings":";;AAAA,yCAAsC;AACtC,iEAA8E;AAC9E,2CAA8C;AAE9C,MAAM,SAAS,GAAG,IAAI,qBAAS,EAAE,CAAC;AAElC,SAAS,CAAC,IAAI,CAAe,qBAAY,CAAC,CAAC,eAAe,CAAC,IAAI,qBAAY,EAAE,CAAC,CAAC;AAE/E,SAAS,CAAC,IAAI,CAAkB,iBAAiB,CAAC,CAAC,EAAE,CAAC,gCAAc,CAAC,CAAC;AAEtE,kBAAe,SAAS,CAAC"}
