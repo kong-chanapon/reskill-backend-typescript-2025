@@ -1,13 +1,11 @@
-import { injectable } from "inversify";
-import { userRoles } from "../ utils  /enum";
+import { inject, injectable } from "inversify";
 import { CreateUserModel, UserDTO} from "../models/dto/users.dto";
-import { PrismaClient } from "@prisma/client";
-import { UserEntity } from "../models/entity/users.entity";
 import { Common } from "../ utils  /common";
 import { LoginRequest, LoginResponse } from "../models/dto/auth.dto";
-import mapper from "../mappings/mapper";
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import { TYPES } from "../config   /types";
+import { IAccountDao } from "../dal/account.dao";
 
 dotenv.config();
 
@@ -22,52 +20,30 @@ export interface IAccountService {
 @injectable()
 export class AccountService implements IAccountService {
 
-    constructor(private prisma: PrismaClient) {}
+    constructor(@inject(TYPES.IAccountDao) private accountDao: IAccountDao) {}
 
     public async register(createUserModel: CreateUserModel): Promise<UserDTO | null> {
-       try {
-            const password = await Common.encryptPassword(createUserModel.password);
-            const user = await this.prisma.users.create({
-            data: {
-                    username: createUserModel.username,
-                    email: createUserModel.email,
-                    password : password,
-                    role: userRoles.USER
-            }
-            });
-
-            if (user === null) return null;
-
-            return mapper.map(user, UserEntity, UserDTO);
-       
-       } catch (error) {
-            console.error(error);
-            return null;
-       }
+        const password = await Common.encryptPassword(createUserModel.password);
+        createUserModel.password = password;
+        return await this.accountDao.createAccount(createUserModel);
     }
 
     public async login(req: LoginRequest): Promise<LoginResponse | null> {
-            const user = await this.prisma.users.findFirst({
-                where: { OR: [{ username: req.username }, { email: req.email }] }
-            });
+        const user = await this.accountDao.getAccountByEmailOrUsername(req.email, req.username);
+
+        if(user === null) return null;
+
+        const isPasswordMatch = await Common.comparePassword(req.password, user.password);
+
+        if(!isPasswordMatch) return null;
+
+        const payload = {
+            username: user.username,
+            email: user.email,
+            role: Common.getUserRole(user.role)
+        };
     
-            if(user === null) return null;
-    
-            const isPasswordMatch = await Common.comparePassword(req.password, user.password);
-    
-            if(!isPasswordMatch) return null;
-    
-            const payload = {
-                username: user.username,
-                email: user.email,
-                role: Common.getUserRole(user.role)
-            };
-    
-            const accessToken = this.generateAccessToken(payload);
-            const refreshToken = this.generateRefreshToken(payload);
-            
-    
-            return new LoginResponse(accessToken, refreshToken);
+        return new LoginResponse(this.generateAccessToken(payload), this.generateRefreshToken(payload));
     }
 
     public authorize(token: string): boolean {
@@ -84,7 +60,7 @@ export class AccountService implements IAccountService {
     
 
     private generateAccessToken(payload: any): string {
-        return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: '15m' });
+        return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: '59m' });
     }
 
     private generateRefreshToken(payload: any): string {

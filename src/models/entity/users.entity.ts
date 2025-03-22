@@ -9,4 +9,6 @@ export class UserEntity {
     email!: string;
     @AutoMap()
     password!: string;
+    @AutoMap()
+    role!: number;
 }

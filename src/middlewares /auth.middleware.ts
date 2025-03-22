@@ -3,8 +3,9 @@ import container from "../config   /setup";
 import { IAccountService } from "../services/account.service";
 import { Result } from "../models/dto/result.dto";
 import { Common } from "../ utils  /common";
+import { TYPES } from "../config   /types";
 
-const accountService = container.get<IAccountService>("IAccountService");
+const accountService = container.get<IAccountService>(TYPES.IAccountService);
 
 export const authorize = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -21,13 +22,18 @@ export const authorize = async (req: Request, res: Response, next: NextFunction)
             res.status(401).json(new Result(Common.getBizCode("401"), null));
             return;
         };
+        
 
         const payload = accountService.getPayloadAccessToken(token as string);
 
         req.body.userInfo = payload;
         next();
-    } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+    } catch (error: any) {
+        if(error?.name === "TokenExpiredError") {
+            res.status(401).json({ message: "Token Expired" });
+        } else {
+            res.status(500).json({ message: "Internal Server Error" });
+        }
         return;
     }
 }

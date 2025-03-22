@@ -40,5 +40,8 @@ export class Common {
         }
     }
 
+    public static getCurrentDate(): Date {
+        return new Date();
+    }
     
 }

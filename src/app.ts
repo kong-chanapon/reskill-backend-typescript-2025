@@ -4,6 +4,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import { swaggerOptions } from "./config   /swagger.options";
 import router from "./routers";
+import "reflect-metadata";
 
 
 

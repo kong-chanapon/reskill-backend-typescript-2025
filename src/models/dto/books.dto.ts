@@ -45,4 +45,6 @@ export class UpdateBookModel {
     stock!: number;
     @AutoMap()
     category!: number;
+    @AutoMap()
+    updatedAt!: Date;
 }

@@ -1,8 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { login, register } from '../controllers/account.controller';
 import { authorize } from '../middlewares /auth.middleware';
-import { getBooksAsync } from '../controllers/books.controller';
-
+import { createBookAsync, deleteBookAsync, getBookByIdAsync, getBooksAsync, updateBookAsync } from '../controllers/books.controller';
 
 
 const router = Router();
@@ -18,12 +17,13 @@ router.get('/health', (req: Request, res: Response) => {
 router.post('/register', register);
 router.post('/login', login);
 
+
 // books routes
 router.get('/books', authorize, getBooksAsync);
-router.get('/books/:id', authorize, getBooksAsync);
-router.post('/books', authorize, getBooksAsync);
-router.put('/books/:id', authorize, getBooksAsync);
-router.delete('/books/:id', authorize, getBooksAsync);
+router.get('/books/:id', authorize, getBookByIdAsync);
+router.post('/books', authorize, createBookAsync);
+router.put('/books/:id', authorize, updateBookAsync);
+router.delete('/books/:id', authorize, deleteBookAsync);
 
 
 export default router;
