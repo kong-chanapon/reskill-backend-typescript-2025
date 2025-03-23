@@ -11,4 +11,8 @@ export class UserEntity {
     password!: string;
     @AutoMap()
     role!: number;
+    @AutoMap()
+    createdAt!: Date;
+    @AutoMap()
+    updatedAt!: Date;
 }

@@ -1,16 +1,16 @@
 import { BookDTO, CreateBookModel, UpdateBookModel } from "../models/dto/books.dto";
 import mapper from "../mappings/mapper";
-import { BookEntity } from "../models/entity/books.entity";
+import { BookEntity } from "../models/entity/book.entity";
 import { inject, injectable } from "inversify";
 import { Common } from "../ utils  /common";
 import { TYPES } from "../config   /types";
-import { IBookDao } from "../dal/books.dao";
+import { IBookDao } from "../dao/book.dao";
 
 export interface IBookService {
     getBooksAsync: () => Promise<BookDTO[]>;
     getBookByIdAsync: (id: string) => Promise<BookEntity | null>;
-    createBookAsync: (book: CreateBookModel) => Promise<BookDTO | null>;
-    updateBookAsync: (id:string, book: UpdateBookModel) => Promise<BookDTO | null>;
+    createBookAsync: (model: CreateBookModel) => Promise<BookDTO | null>;
+    updateBookAsync: (id:string, model: UpdateBookModel) => Promise<BookDTO | null>;
     deleteBookAsync: (id: string) => Promise<boolean>;
 }
 
@@ -20,31 +20,35 @@ export class BookService implements IBookService {
     constructor(@inject(TYPES.IBookDao) private bookDao: IBookDao) {}
 
     public async getBooksAsync(): Promise<BookDTO[]> {
-        return await this.bookDao.getBooks();
+        const result = await this.bookDao.getBooks();
+        return mapper.mapArray(result, BookEntity, BookDTO);
     }
 
     public async getBookByIdAsync(id: string): Promise<BookEntity| null> {
         return await this.bookDao.getBookById(id);
     }
     
-    public async createBookAsync(book: CreateBookModel): Promise<BookDTO | null> {
-        book.publishedAt = new Date(book.publishedAt);
-        const bookEntity = mapper.map(book, CreateBookModel, BookEntity);
-        const currentDate = Common.getCurrentDate();
-        bookEntity.createdAt = currentDate;
+    public async createBookAsync(model: CreateBookModel): Promise<BookDTO | null> {
+        model.publishedAt = new Date(model.publishedAt);
+        const bookEntity = mapper.map(model, CreateBookModel, BookEntity);
+
+        const result = await this.bookDao.createBook(bookEntity);
         
-        return await this.bookDao.createBook(bookEntity);
+        return result ? mapper.map(result, BookEntity, BookDTO) : null;
     }
 
-    public async updateBookAsync(id:string, book: UpdateBookModel): Promise<BookDTO | null> {
+    public async updateBookAsync(id:string, model: UpdateBookModel): Promise<BookDTO | null> {
         const oldBook = await this.bookDao.getBookById(id);
         if (!oldBook) return null;
 
-        const updatedBook = { ...oldBook, ...book };
+        const updatedBook = { ...oldBook, ...model };
         updatedBook.publishedAt = new Date(updatedBook.publishedAt);
-        updatedBook.updatedAt = Common.getCurrentDate();
+        const bookEntity = mapper.map(updatedBook, UpdateBookModel, BookEntity);
 
-        return await this.bookDao.updateBook(id, updatedBook);
+        const result = await this.bookDao.updateBook(id, bookEntity);
+        if(result === null) return null;
+
+        return result ? mapper.map(result, BookEntity, BookDTO) : null;
     }
 
     public async deleteBookAsync(id: string): Promise<boolean> {

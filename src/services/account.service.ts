@@ -5,12 +5,15 @@ import { LoginRequest, LoginResponse } from "../models/dto/auth.dto";
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { TYPES } from "../config   /types";
-import { IAccountDao } from "../dal/account.dao";
+import { IAccountDao } from "../dao/account.dao";
+import mapper from "../mappings/mapper";
+import { UserEntity } from "../models/entity/user.entity";
+import { userRoles } from "../ utils  /enum";
 
 dotenv.config();
 
 export interface IAccountService {
-    register: (createUserModel: CreateUserModel) => Promise<UserDTO | null>;
+    register: (model: CreateUserModel) => Promise<UserDTO | null>;
     login: (req: LoginRequest) => Promise<LoginResponse | null>;
     authorize: (token: string) => boolean;
     getPayloadAccessToken: (token: string) => any;
@@ -22,10 +25,16 @@ export class AccountService implements IAccountService {
 
     constructor(@inject(TYPES.IAccountDao) private accountDao: IAccountDao) {}
 
-    public async register(createUserModel: CreateUserModel): Promise<UserDTO | null> {
-        const password = await Common.encryptPassword(createUserModel.password);
-        createUserModel.password = password;
-        return await this.accountDao.createAccount(createUserModel);
+    public async register(model: CreateUserModel): Promise<UserDTO | null> {
+        const password = await Common.encryptPassword(model.password);
+        model.password = password;
+
+        const userEntity = mapper.map(model, CreateUserModel, UserEntity);
+        userEntity.role = userRoles.USER;
+
+        const result = await this.accountDao.createAccount(userEntity);
+        
+        return result ? mapper.map(result, UserEntity, UserDTO) : null;
     }
 
     public async login(req: LoginRequest): Promise<LoginResponse | null> {

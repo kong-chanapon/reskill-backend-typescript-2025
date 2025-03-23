@@ -1,12 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { injectable } from "inversify";
-import { CreateUserModel, UserDTO } from "../models/dto/users.dto";
-import { userRoles } from "../ utils  /enum";
-import mapper from "../mappings/mapper";
-import { UserEntity } from "../models/entity/users.entity";
+import { UserEntity } from "../models/entity/user.entity";
 
 export interface IAccountDao {
-    createAccount: (createUserModel: CreateUserModel) => Promise<UserDTO | null>;
+    createAccount: (model: UserEntity) => Promise<UserEntity | null>;
     getAccountByEmailOrUsername: (email: string, username: string) => Promise<UserEntity | null>;
 }
 
@@ -15,18 +12,9 @@ export interface IAccountDao {
 export class AccountDao implements IAccountDao {
     constructor(private prisma: PrismaClient) {}
 
-    public async createAccount(createUserModel: CreateUserModel): Promise<UserDTO | null> {
+    public async createAccount(model: UserEntity): Promise<UserEntity | null> {
         try {
-              const user = await this.prisma.users.create({
-                data: {
-                        username: createUserModel.username,
-                        email: createUserModel.email,
-                        password : createUserModel.password,
-                        role: userRoles.USER
-                }
-                });
-
-            return mapper.map(user, UserEntity, UserDTO);
+            return await this.prisma.users.create({data: model});
         } catch (error) {
             console.error(error);
             return null;

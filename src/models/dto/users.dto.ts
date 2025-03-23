@@ -1,10 +1,12 @@
 import { AutoMap } from "@automapper/classes";
-import { Request } from "express";
 
-export interface CreateUserModel{
-    username: string;
-    email: string;
-    password: string;
+export class CreateUserModel{
+    @AutoMap()
+    username!: string;
+    @AutoMap()
+    email!: string;
+    @AutoMap()
+    password!: string;
 }
 
 export class UserDTO {

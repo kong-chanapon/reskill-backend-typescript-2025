@@ -38,10 +38,18 @@ model Books {
 model Orders {
   id   String  @id @default(auto()) @map("_id") @db.ObjectId
   userId String
-  bookId String
-  quantity Int
   total Float
   status Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItems {
+  id   String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId String
+  bookId String
+  quantity Int
+  price Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

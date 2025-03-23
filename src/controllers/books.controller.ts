@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Common } from "../ utils  /common";
 import container from "../config   /setup";
 import { Result } from "../models/dto/result.dto";
-import { IBookService } from "../services/books.service";
+import { IBookService } from "../services/book.service";
 import { TYPES } from "../config   /types";
 
 const BookService = container.get<IBookService>(TYPES.IBookService);
